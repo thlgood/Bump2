@@ -2,7 +2,7 @@
 #define THREAD_HANDLE_H
 
 #include <pthread.h>
-
+#include "feed_conn.h"
 void *thread_handle(void *arg);
 #define MAX_CONN_PER_THREAD 1000
 

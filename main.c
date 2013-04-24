@@ -4,12 +4,14 @@
 #include "setup_tcp.h"
 #include "thread_handle.h"
 #include "accept_list.h"
+#include "fd_pair.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
 
 int main(void)
 {
     extern pthread_mutex_t accept_mutex;
+    extern pthread_mutex_t fp_mutex;
     extern struct accept_list *AL;
 
     if (read_config() < 0)
@@ -17,6 +19,7 @@ int main(void)
         return 1;
     }
     pthread_mutex_init(&accept_mutex, NULL);
+    pthread_mutex_init(&fp_mutex, NULL);
 
     int sockfd;
     sockfd = setup_tcp();

@@ -2,6 +2,7 @@
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "fd_pair.h"
 
 void feed_conn(int fd)
 {
@@ -49,7 +50,21 @@ void conn_manage(struct accept_list *al)
     {
         if (events[i].events & EPOLLIN)
         {
-            feed_conn(events[i].data.fd);
+            int retval = feed_conn(events[i].data.fd);
+            if (0 != retval)
+            {
+                accept_list_remove(al, events[i].data.fd);
+                close(events[i].data.fd);
+            }
         }
+    }
+
+    //send start
+    extern struct fd_pair FP;
+    struct accept_list *head = al;
+    struct fd_pair     *fdps = FP;
+    for(; head != NULL; head = head->next)
+    {
+
     }
 }

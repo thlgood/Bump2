@@ -17,7 +17,7 @@ struct http_head
 //return >0 for argument error
 int parser_head(char* buffer, struct http_head*, int str_len);
 
-//return 0 for success
-int gen_http_head(char* head_str, int return_code, char* filepath);
+
+void gen_http_head(char* head_str, int return_code, char* filepath);
 
 #endif // HTTP_HEAD_H

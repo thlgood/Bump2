@@ -4,6 +4,27 @@
 #include "feed_conn.h"
 #include <linux/limits.h>
 #include <string.h>
+#include <time.h>
+#include <sys/stat.h>
+
+inline void get_gmtime(char *ptr)
+{
+    time_t time_value = time(NULL);
+    struct tm *tm_ptr = gmtime(&time_value);
+    strftime(ptr, 64, "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", tm_ptr);
+}
+
+inline int get_file_size(char *filepath)
+{
+    struct stat file_stat;
+    if (lstat(filepath, &file_stat) < 0)
+    {
+        file_stat.st_size = 0;
+        perror("lstat");
+    }
+    return (int)file_stat.st_size;
+
+}
 
 int parser_head(char* buffer, struct http_head* hh, int str_len)
 {
@@ -15,7 +36,7 @@ int parser_head(char* buffer, struct http_head* hh, int str_len)
             fprintf(stderr, "%s struct http_head == NULL", __FUNCTION__);
         if (str_len <= 0)
             fprintf(stderr, "%s str_len should big than zero\n", __FUNCTION__);
-        if (strlen(buffer) != str_len)
+        if (strlen(buffer) != (unsigned)str_len)
             fprintf(stderr, "%s str_len != the length of buffer\n", __FUNCTION__);
         return -1;
     }
@@ -35,9 +56,14 @@ int parser_head(char* buffer, struct http_head* hh, int str_len)
         hh->method = HEAD;
         return 1;
     }
+    else
+    {
+        hh->method = UNKNOW;
+        return 1;
+    }
 }
 
-int gen_http_head(char *head_str, int return_code, char* filepath)
+void gen_http_head(char *head_str, int return_code, char* filepath)
 {
     char *flag = head_str;
     if (head_str == NULL)
@@ -46,12 +72,87 @@ int gen_http_head(char *head_str, int return_code, char* filepath)
     }
     if(200 == return_code)
     {
-        extern char server_name[];
-        strcpy(head_str, "HTTP/1.1 200 OK\r\n");
-        flag += strlen("HTTP/1.1 200 OK\r\n");
-        strcpy(flag, server_name);
-        flag += strlen(server_name);
+        int tmp;
+        //HTTP/1.1 200 ok\r\n
+        tmp = sprintf(flag, "HTTP/1.1 200 OK\r\n");
+        flag += tmp;
 
+        //Server: Bump Web Server/0.1\r\n
+        tmp = sprintf(flag, "Server: Bump Web Server/0.1\r\n");
+        flag += tmp;
+
+        //Date: Tue, 23 Apr 2013 07:03:49 GMT
+        char time_string[64];
+        get_gmtime(time_string);
+        tmp = sprintf(flag, "%s", time_string);
+        flag += tmp;
+
+        /*//Content-Length: 8775\r\n
+        tmp = sprintf(flag, "Content-Length: %d\r\n", get_file_size(filepath));
+        flag += tmp;*/
+
+        //Content-Type: application/octet-stream\r\n
+        tmp = sprintf(flag, "Content-Type: application/octet-stream\r\n");
+        flag += tmp;
+
+        //Connection: keep-alive
+        tmp = sprintf(flag, "Connection: close\r\n");
+        flag += tmp;
+    }
+    else if (403 == return_code)
+    {
+        int tmp;
+
+        //HTTP/1.1 200 ok\r\n
+        tmp = sprintf(flag, "HTTP/1.1 403 Forbidden\r\n");
+        flag += tmp;
+
+        //Server: Bump Web Server/0.1\r\n
+        tmp = sprintf(flag, "Server: Bump Web Server/0.1\r\n");
+        flag += tmp;
+
+        //Date: Tue, 23 Apr 2013 07:03:49 GMT
+        char time_string[64];
+        get_gmtime(time_string);
+        tmp = sprintf(flag, "%s", time_string);
+        flag += tmp;
     }
 
+    else if(404 == return_code)
+    {
+        int tmp;
+
+        //HTTP/1.1 200 ok\r\n
+        tmp = sprintf(flag, "HTTP/1.1 404 Not Found\r\n");
+        flag += tmp;
+
+        //Server: Bump Web Server/0.1\r\n
+        tmp = sprintf(flag, "Server: Bump Web Server/0.1\r\n");
+        flag += tmp;
+
+        //Date: Tue, 23 Apr 2013 07:03:49 GMT
+        char time_string[64];
+        get_gmtime(time_string);
+        tmp = sprintf(flag, "%s", time_string);
+        flag += tmp;
+    }
+    else
+    {
+        //HTTP/1.1 400 Bad Request\r\n
+        tmp = sprintf(flag, "HTTP/1.1 404 Not Found\r\n");
+        flag += tmp;
+
+        //Server: Bump Web Server/0.1\r\n
+        tmp = sprintf(flag, "Server: Bump Web Server/0.1\r\n");
+        flag += tmp;
+
+        //Date: Tue, 23 Apr 2013 07:03:49 GMT
+        char time_string[64];
+        get_gmtime(time_string);
+        tmp = sprintf(flag, "%s", time_string);
+        flag += tmp;
+    }
+
+    sprintf(flag, "\r\n");
+    flag[2] = '\0';
 }

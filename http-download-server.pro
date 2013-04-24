@@ -11,7 +11,8 @@ SOURCES += main.c \
     accept_list.c \
     conn_manage.c \
     feed_conn.c \
-    http_head.c
+    http_head.c \
+    fd_pair.c
 INCLUDEPATH += /usr/include/glib-2.0 \
  /usr/lib/x86_64-linux-gnu/glib-2.0/include
 LIBS = -lglib-2.0 -lpthread
@@ -24,4 +25,5 @@ HEADERS += \
     conn_manage.h \
     feed_conn.h \
     http_head.h \
-    error_reply.h
+    error_reply.h \
+    fd_pair.h
