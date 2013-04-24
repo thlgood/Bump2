@@ -3,17 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-void feed_request(struct accept_list *p)
-{
-    (void)p;
-    //sleep(1);
-}
+#include "conn_manage.h"
 
 void* thread_handle(void *arg)
 {
     (void)arg;
 
+    int epoll_fd = 0;
     pthread_detach(pthread_self());
     int current_connections = 0;
     struct accept_list *thread_AL = NULL;
@@ -42,6 +38,7 @@ void* thread_handle(void *arg)
                 pthread_mutex_unlock(&accept_mutex);
             }
         }
-        feed_request(thread_AL);
+        //feed_request(thread_AL);
+        conn_manage(&thread_AL, &epoll_fd);
     }
 }

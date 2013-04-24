@@ -1,4 +1,6 @@
 #include "fd_pair.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 struct fd_pair *fd_pair_remove(struct fd_pair *fpl, int key)
 {
@@ -42,7 +44,7 @@ struct fd_pair *fd_pair_remove(struct fd_pair *fpl, int key)
     }
     else
     {
-        fprintf(stderr, "Error! can't find the node, val=%d, %s", val, __FUNCTION__);
+        fprintf(stderr, "Error! can't find the node, key=%d, %s",key,  __FUNCTION__);
         return fpl;
     }
 }
@@ -59,4 +61,15 @@ struct fd_pair* fd_pair_add(struct fd_pair *fpl, int client_fd, int server_fd)
     temp->client_fd = client_fd;
     temp->server_fd = server_fd;
     return temp;
+}
+
+int fd_pair_get_val(struct fd_pair *fpl, int key)
+{
+    while (fpl != NULL)
+    {
+        if (fpl->client_fd == key)
+            return fpl->server_fd;
+        fpl = fpl->next;
+    }
+    return -1;
 }

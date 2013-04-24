@@ -28,7 +28,7 @@ int feed_conn(int fd)
         int retval;
         strncpy(filepath, dir, PATH_MAX);
         path_length = strlen(filepath);
-        strncat(filepath, request_head, PATH_MAX - path_length);
+        strncat(filepath, request_head.URL, PATH_MAX - path_length);
         if (request_head.URL[strlen(request_head.URL)] == '/')
             strcat(request_head.URL, "index.html");
         path_length = strlen(filepath);

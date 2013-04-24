@@ -66,13 +66,14 @@ int parser_head(char* buffer, struct http_head* hh, int str_len)
 void gen_http_head(char *head_str, int return_code, char* filepath)
 {
     char *flag = head_str;
+    int tmp;
+    (void)filepath;
     if (head_str == NULL)
     {
         fprintf(stderr, "%s, head_str shouldn't be NULL", __FUNCTION__);
     }
     if(200 == return_code)
     {
-        int tmp;
         //HTTP/1.1 200 ok\r\n
         tmp = sprintf(flag, "HTTP/1.1 200 OK\r\n");
         flag += tmp;
@@ -101,8 +102,6 @@ void gen_http_head(char *head_str, int return_code, char* filepath)
     }
     else if (403 == return_code)
     {
-        int tmp;
-
         //HTTP/1.1 200 ok\r\n
         tmp = sprintf(flag, "HTTP/1.1 403 Forbidden\r\n");
         flag += tmp;
@@ -120,8 +119,6 @@ void gen_http_head(char *head_str, int return_code, char* filepath)
 
     else if(404 == return_code)
     {
-        int tmp;
-
         //HTTP/1.1 200 ok\r\n
         tmp = sprintf(flag, "HTTP/1.1 404 Not Found\r\n");
         flag += tmp;
