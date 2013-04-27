@@ -45,10 +45,6 @@ int main(void)
         fd = accept(sockfd, (struct sockaddr*)&sock_addr, &len);
         if (fd > 0)
         {
-            int flag;
-            flag = fcntl(fd, F_GETFL, 0);
-            flag |= O_NONBLOCK;
-            fcntl(fd, F_SETFL, flag);
             pthread_mutex_lock(&accept_mutex);
             AL = accept_list_add(AL, fd);
             pthread_mutex_unlock(&accept_mutex);

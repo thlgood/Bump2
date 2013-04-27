@@ -47,8 +47,15 @@ int parser_head(char* buffer, struct http_head* hh, int str_len)
     sscanf(buffer, "%s", method);
     if (!strncmp(method, "GET", 3))
     {
+        extern char dir[];
         hh->method = GET;
         sscanf(buffer, "%s%s", filepath, filepath);
+        if (!strcmp(filepath, "/")) {
+            strcat(filepath, "index.html");
+        }
+        strcpy(hh->URL, dir);
+        strcat(hh->URL, filepath);
+        printf("hh->url:%s", hh->URL);
         return 0;
     }
     else if(!strncmp(method, "HEAD", 4))
@@ -87,10 +94,12 @@ void gen_http_head(char *head_str, int return_code, char* filepath)
         get_gmtime(time_string);
         tmp = sprintf(flag, "%s", time_string);
         flag += tmp;
-
-        /*//Content-Length: 8775\r\n
-        tmp = sprintf(flag, "Content-Length: %d\r\n", get_file_size(filepath));
-        flag += tmp;*/
+        if (filepath != NULL)
+        {
+            //Content-Length: 8775\r\n
+            tmp = sprintf(flag, "Content-Length: %d\r\n", get_file_size(filepath));
+            flag += tmp;
+        }
 
         //Content-Type: application/octet-stream\r\n
         tmp = sprintf(flag, "Content-Type: application/octet-stream\r\n");

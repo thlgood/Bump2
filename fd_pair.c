@@ -71,5 +71,5 @@ int fd_pair_get_val(struct fd_pair *fpl, int key)
             return fpl->server_fd;
         fpl = fpl->next;
     }
-    return -1;
+    return -4;
 }

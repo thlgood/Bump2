@@ -5,12 +5,15 @@
 #include "fd_pair.h"
 #include <unistd.h>
 #include <sys/socket.h>
+//static int i_count = 0;
 
 void conn_manage(struct accept_list **al, int* epoll_fd)
 {
-    extern struct fd_pair *FP;
+    char buffer[BUFSIZ];
+    struct accept_list *head;
     struct epoll_event ev;
     struct epoll_event events[MAX_CONN_PER_THREAD];
+    extern struct fd_pair *FP;
 
     //extern struct accept_list AL;
     int max_event = accept_list_length(*al);
@@ -32,21 +35,12 @@ void conn_manage(struct accept_list **al, int* epoll_fd)
     {
         ev.events = EPOLLIN | EPOLLET;
         ev.data.fd = temp->node;
-        if (epoll_ctl(*epoll_fd, EPOLL_CTL_ADD, temp->node, &ev) < 0)
-        {
-            perror("epoll_ctl");
-            continue;
-        }
+        epoll_ctl(*epoll_fd, EPOLL_CTL_ADD, temp->node, &ev);
     }
 
-    if (max_event > 0)
-    {
-        ret_val = epoll_wait(*epoll_fd, events, max_event, -1);
-        if (ret_val != max_event)
-        {
-            perror("epoll_wait");
-            exit(EXIT_FAILURE);
-        }
+    ret_val = 0;
+    if (max_event > 0) {
+        ret_val = epoll_wait(*epoll_fd, events, max_event, 0);
     }
 
     int i;
@@ -65,27 +59,25 @@ void conn_manage(struct accept_list **al, int* epoll_fd)
     }
 
     //send start
-    struct accept_list *head = *al;
-    //struct fd_pair     *fdps = FP;
-    char buffer[BUFSIZ];
-    for(; head != NULL; head = head->next)
+    for(head = *al; head != NULL; head = head->next)
     {
         int local_file_fd = fd_pair_get_val(FP, head->node);
-        if (local_file_fd < 0)
-        {
-            fprintf(stderr, "%s local file fd should big than zero\n", __FUNCTION__);
-            FP = fd_pair_remove(FP, head->node);
-            *al = accept_list_remove(*al, head->node);
+        if (local_file_fd < 0) {
+            continue;
         }
         ret_val = read(local_file_fd, buffer, BUFSIZ);
-        if (ret_val < 0)
+        if (ret_val == 0)
         {
+            close(head->node);
+            close(local_file_fd);
             FP = fd_pair_remove(FP, head->node);
             *al = accept_list_remove(*al, head->node);
         }
         else if (ret_val < BUFSIZ)
         {
             send(head->node, buffer, ret_val, 0);
+            close(head->node);
+            close(local_file_fd);
             FP = fd_pair_remove(FP, head->node);
             *al = accept_list_remove(*al, head->node);
         }
@@ -94,6 +86,8 @@ void conn_manage(struct accept_list **al, int* epoll_fd)
             ret_val = send(head->node, buffer, ret_val, 0);
             if (ret_val <= 0)
             {
+                close(head->node);
+                close(local_file_fd);
                 FP = fd_pair_remove(FP, head->node);
                 *al = accept_list_remove(*al, head->node);
             }

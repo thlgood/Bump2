@@ -20,34 +20,25 @@ int feed_conn(int fd)
     struct http_head request_head;
     parser_head(buffer, &request_head, retval);
 
+    char head[HEAD_MAX_LEN];
+
     if (request_head.method == GET)
     {
-        int path_length;
-        extern char dir[];
-        char filepath[PATH_MAX + 1] = "";
         int retval;
-        strncpy(filepath, dir, PATH_MAX);
-        path_length = strlen(filepath);
-        strncat(filepath, request_head.URL, PATH_MAX - path_length);
-        if (request_head.URL[strlen(request_head.URL)] == '/')
-            strcat(request_head.URL, "index.html");
-        path_length = strlen(filepath);
-        strncat(filepath, request_head.URL, PATH_MAX - path_length);
         retval = open(request_head.URL, O_RDONLY);
-        if (retval)
+        if (retval < 0)
         {
             extern int errno;
-            char head[HEAD_MAX_LEN];
             if (errno == EACCES)
             {
                 gen_http_head(head, 403, NULL);
-                strcpy(head, "<h1>403 Forbidden</h1>");
+                strcat(head, "<h1>403 Forbidden</h1>");
                 send(fd, head, strlen(head), 0);
             }
             else
             {
                 gen_http_head(head, 404, NULL);
-                strcpy(head, "<h1>404 Not Found</h1>");
+                strcat(head, "<h1>404 Not Found</h1>");
                 send(fd, head, strlen(head), 0);
             }
             return -1;
@@ -57,15 +48,22 @@ int feed_conn(int fd)
             extern struct fd_pair *FP;
             extern pthread_mutex_t fp_mutex;
             pthread_mutex_lock(&fp_mutex);
-            fd_pair_add(FP, fd, retval);
+            FP = fd_pair_add(FP, fd, retval);
             pthread_mutex_unlock(&fp_mutex);
+            gen_http_head(head, 200, request_head.URL);
+            send(fd, head, strlen(head), 0);
             return 0;
         }
     }
-    else if (request_head.method = HEAD)
+    else if (request_head.method == HEAD)
     {
-        char head[HEAD_MAX_LEN];
-        gen_http_head(head, 200,NULL);
+        gen_http_head(head, 200, NULL);
+        send(fd, head, strlen(head), 0);
+        return 1;
+    }
+    else
+    {
+        gen_http_head(head, 400, NULL);
         send(fd, head, strlen(head), 0);
         return 1;
     }

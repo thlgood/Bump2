@@ -12,7 +12,7 @@ int setup_tcp()
     int sock;
     int retval;                     //return value
     int sockopt = 1;
-    printf("port = %d\n", port);
+    printf("set port:%d\n", port);
 
     //Create socket
     sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
